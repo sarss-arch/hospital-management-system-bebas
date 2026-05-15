@@ -1,0 +1,2 @@
+-- Jalankan: php artisan migrate:fresh --seed lalu export database MySQL kamu ke file ini.
+-- mysqldump -u root -p hospital_management_system > database/backup/initial_backup.sql

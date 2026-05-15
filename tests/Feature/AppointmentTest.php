@@ -1,0 +1,4 @@
+<?php
+namespace Tests\Feature;
+use App\Enums\UserRole; use App\Models\Doctor; use App\Models\Patient; use App\Models\Schedule; use App\Models\User; use Illuminate\Foundation\Testing\RefreshDatabase; use Tests\TestCase;
+class AppointmentTest extends TestCase { use RefreshDatabase; public function test_patient_can_create_appointment(): void { $patient=Patient::factory()->for(User::factory()->create(['role'=>UserRole::PATIENT]))->create(); $doctor=Doctor::factory()->for(User::factory()->create(['role'=>UserRole::DOCTOR]))->create(); $schedule=Schedule::factory()->for($doctor)->create(); $this->actingAs($patient->user)->postJson('/api/v1/appointments',['doctor_id'=>$doctor->id,'schedule_id'=>$schedule->id,'appointment_date'=>now()->addDay()->toDateString(),'complaint'=>'Demam tinggi'])->assertCreated(); } }

@@ -1,0 +1,1 @@
+<h2>Status Appointment</h2><p>Status appointment kamu dengan Dr. {{ $appointment->doctor->user->name }} berubah menjadi <b>{{ $appointment->status->value }}</b>.</p>
