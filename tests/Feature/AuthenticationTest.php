@@ -4,6 +4,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -48,8 +49,9 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)
-            ->postJson('/api/v1/auth/logout')
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/v1/auth/logout')
             ->assertOk();
     }
 }
