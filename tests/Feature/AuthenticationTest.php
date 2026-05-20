@@ -4,6 +4,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -46,9 +47,10 @@ class AuthenticationTest extends TestCase
 
     public function test_user_can_logout(): void
     {
-        $user = User::factory()->create();
+        $user  = User::factory()->create();
+        $token = $user->createToken('api-token')->plainTextToken;
 
-        $this->actingAs($user)
+        $this->withHeader('Authorization', 'Bearer ' . $token)
             ->postJson('/api/v1/auth/logout')
             ->assertOk();
     }
