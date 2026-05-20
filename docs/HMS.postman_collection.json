@@ -4,49 +4,254 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:8000/api/v1"
-    },
-    {
-      "key": "token",
-      "value": ""
-    }
+    { "key": "base_url", "value": "http://localhost:8000/api/v1" },
+    { "key": "token", "value": "" }
   ],
   "item": [
     {
-      "name": "Login",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Accept",
-            "value": "application/json"
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/auth/register",
+            "body": { "mode": "raw", "options": { "raw": { "language": "json" } },
+              "raw": "{\"name\":\"Budi Santoso\",\"email\":\"budi@test.com\",\"password\":\"password\",\"password_confirmation\":\"password\"}"
+            }
           }
-        ],
-        "url": "{{base_url}}/auth/login",
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"admin@klinik.test\", \"password\": \"password\"}"
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": { "mode": "raw", "options": { "raw": { "language": "json" } },
+              "raw": "{\"email\":\"admin@klinik.test\",\"password\":\"password\"}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/auth/logout"
+          }
         }
-      }
+      ]
     },
     {
-      "name": "List Doctors",
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
-          },
-          {
-            "key": "Accept",
-            "value": "application/json"
+      "name": "Patients",
+      "item": [
+        {
+          "name": "List Patients (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/patients"
           }
-        ],
-        "url": "{{base_url}}/doctors"
-      }
+        },
+        {
+          "name": "Get Patient by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/patients/1"
+          }
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/patients/1",
+            "body": { "mode": "raw", "options": { "raw": { "language": "json" } },
+              "raw": "{\"address\":\"Jl. Merdeka No. 1, Jakarta\",\"phone\":\"081234567890\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doctors",
+      "item": [
+        {
+          "name": "List Doctors",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/doctors"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/appointments",
+            "body": { "mode": "raw", "options": { "raw": { "language": "json" } },
+              "raw": "{\"doctor_id\":1,\"schedule_id\":1,\"appointment_date\":\"2026-05-25\",\"complaint\":\"Demam tinggi dan batuk\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Appointment by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/appointments/1"
+          }
+        },
+        {
+          "name": "Update Appointment Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/appointments/1",
+            "body": { "mode": "raw", "options": { "raw": { "language": "json" } },
+              "raw": "{\"status\":\"confirmed\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Appointment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/appointments/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Medical Records",
+      "item": [
+        {
+          "name": "Create Medical Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/medical-records",
+            "body": { "mode": "raw", "options": { "raw": { "language": "json" } },
+              "raw": "{\"appointment_id\":1,\"diagnosis\":\"Infeksi saluran pernapasan atas\",\"prescription\":\"Amoxicillin 500mg 3x1, Paracetamol 500mg 3x1\",\"notes\":\"Istirahat yang cukup, minum air putih yang banyak\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Medical Record by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/medical-records/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "item": [
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/files/upload",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "fileable_type", "value": "patient", "type": "text" },
+                { "key": "fileable_id", "value": "1", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get/Download File",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/files/1"
+          }
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/files/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Export Report (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/export?format=pdf",
+              "query": [{ "key": "format", "value": "pdf" }]
+            }
+          }
+        }
+      ]
     }
   ]
 }
