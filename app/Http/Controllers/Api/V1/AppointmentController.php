@@ -1,4 +1,68 @@
 <?php
 namespace App\Http\Controllers\Api\V1;
-use App\Enums\AppointmentStatus; use App\Http\Controllers\Controller; use App\Http\Requests\StoreAppointmentRequest; use App\Http\Requests\UpdateAppointmentRequest; use App\Http\Resources\AppointmentResource; use App\Http\Responses\ApiResponse; use App\Mail\AppointmentBookedMail; use App\Mail\AppointmentStatusChangedMail; use App\Models\Appointment; use App\Models\Schedule; use Illuminate\Support\Facades\Mail;
-class AppointmentController extends Controller { private function authorizeView(Appointment $a): bool { $u=request()->user(); return $u->isRole('admin') || $u->patient?->id===$a->patient_id || $u->doctor?->id===$a->doctor_id; } public function store(StoreAppointmentRequest $r){ $schedule=Schedule::where('id',$r->schedule_id)->where('doctor_id',$r->doctor_id)->firstOrFail(); $queue=Appointment::where('doctor_id',$r->doctor_id)->whereDate('appointment_date',$r->appointment_date)->count()+1; $a=Appointment::create($r->validated()+['patient_id'=>$r->user()->patient->id,'queue_number'=>$queue]); Mail::to($r->user()->email)->queue(new AppointmentBookedMail($a->load(['doctor.user','patient.user','schedule']))); return ApiResponse::success(new AppointmentResource($a->load(['doctor.user','patient.user','schedule'])),'Appointment dibuat',201); } public function show(Appointment $appointment){ if(!$this->authorizeView($appointment)) return ApiResponse::error('Forbidden',403); return ApiResponse::success(new AppointmentResource($appointment->load(['doctor.user','patient.user','schedule']))); } public function update(UpdateAppointmentRequest $r, Appointment $appointment){ $u=$r->user(); if(!$u->isRole('admin') && $u->doctor?->id!==$appointment->doctor_id) return ApiResponse::error('Forbidden',403); $next=AppointmentStatus::from($r->status); if(!$appointment->status->canTransitionTo($next) && $appointment->status!==$next) return ApiResponse::error('Perubahan status tidak valid',422); $appointment->update(['status'=>$next]); Mail::to($appointment->patient->user->email)->queue(new AppointmentStatusChangedMail($appointment->load(['doctor.user','patient.user','schedule']))); return ApiResponse::success(new AppointmentResource($appointment->load(['doctor.user','patient.user','schedule'])),'Status diperbarui'); } public function destroy(Appointment $appointment){ $u=request()->user(); if(!$u->isRole('admin') && $u->patient?->id!==$appointment->patient_id) return ApiResponse::error('Forbidden',403); if(!$appointment->status->canTransitionTo(AppointmentStatus::CANCELLED) && $appointment->status!==AppointmentStatus::PENDING) return ApiResponse::error('Appointment tidak bisa dibatalkan',422); $appointment->update(['status'=>AppointmentStatus::CANCELLED]); return ApiResponse::success(null,'Appointment dibatalkan'); } }
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreAppointmentRequest;
+use App\Http\Requests\UpdateAppointmentRequest;
+use App\Http\Resources\AppointmentResource;
+use App\Http\Responses\ApiResponse;
+use App\Models\Appointment;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+
+class AppointmentController extends Controller
+{
+    // INNER JOIN: appointment + dokter + pasien
+    public function index(): JsonResponse
+    {
+        $appointments = DB::table('appointments')
+            ->join('patients', 'appointments.patient_id', '=', 'patients.id')
+            ->join('doctors', 'appointments.doctor_id', '=', 'doctors.id')
+            ->join('users as patient_users', 'patients.user_id', '=', 'patient_users.id')
+            ->join('users as doctor_users', 'doctors.user_id', '=', 'doctor_users.id')
+            ->select(
+                'appointments.id',
+                'appointments.appointment_date',
+                'appointments.status',
+                'appointments.complaint',
+                'patient_users.name as patient_name',
+                'doctor_users.name as doctor_name'
+            )
+            ->paginate(10);
+
+        return ApiResponse::success($appointments);
+    }
+
+    public function store(StoreAppointmentRequest $request): JsonResponse
+    {
+        $appointment = Appointment::create([
+            'patient_id'       => auth()->user()->patient->id,
+            'doctor_id'        => $request->doctor_id,
+            'schedule_id'      => $request->schedule_id,
+            'appointment_date' => $request->appointment_date,
+            'complaint'        => $request->complaint,
+            'status'           => 'pending',
+        ]);
+
+        return ApiResponse::success(new AppointmentResource($appointment->load(['patient.user', 'doctor.user', 'schedule'])), 'Appointment berhasil dibuat', 201);
+    }
+
+    public function show(Appointment $appointment): JsonResponse
+    {
+        return ApiResponse::success(new AppointmentResource($appointment->load(['patient.user', 'doctor.user', 'schedule'])));
+    }
+
+    public function update(UpdateAppointmentRequest $request, Appointment $appointment): JsonResponse
+    {
+        $appointment->update($request->validated());
+
+        return ApiResponse::success(new AppointmentResource($appointment->load(['patient.user', 'doctor.user', 'schedule'])));
+    }
+
+    public function destroy(Appointment $appointment): JsonResponse
+    {
+        $appointment->delete();
+
+        return ApiResponse::success(null, 'Appointment berhasil dihapus');
+    }
+}
