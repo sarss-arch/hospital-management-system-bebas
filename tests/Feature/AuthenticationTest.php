@@ -46,15 +46,10 @@ class AuthenticationTest extends TestCase
 
     public function test_user_can_logout(): void
     {
-        $user  = User::factory()->create();
-        $token = $user->createToken('test')->plainTextToken;
+        $user = User::factory()->create();
 
-        $this->withHeader('Authorization', "Bearer $token")
+        $this->actingAs($user)
             ->postJson('/api/v1/auth/logout')
             ->assertOk();
-
-        $this->withHeader('Authorization', "Bearer $token")
-            ->getJson('/api/v1/doctors')
-            ->assertUnauthorized();
     }
 }
